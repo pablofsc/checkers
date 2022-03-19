@@ -1,8 +1,12 @@
-#include "bibl.h"
-
 #ifdef __unix__
 	void limpartela() {
 		system("clear");
+	}
+#endif
+
+#ifdef _WIN32
+	void limpartela() {
+		system("cls");
 	}
 #endif
 
@@ -56,10 +60,10 @@ void unsel(int tab[8][8]) {
 	int x, y;
 	for(y = 0; y < 8; y++) {
 		for(x = 0; x < 8; x++) {
-			if(tab[x][y] >= 5 && tab[x][y] <= 8) {
+			if(tab[x][y] >= 5 && tab[x][y] <= 8) { // faz parar de piscar
 				tab[x][y] -= 4;
 			}
-			else if(tab[x][y] == 9) {
+			else if(tab[x][y] == 9) { // remove marcadores de movimento
 				tab[x][y] = 0;
 			}
 		}
@@ -69,9 +73,9 @@ void unsel(int tab[8][8]) {
 int cor(int jog) {
 	switch(jog) {
 		case 1:
-			return(94);
+			return(44);
 		case 2:
-			return(91);
+			return(41);
 	}
 	return(0);
 }
@@ -167,7 +171,100 @@ int mostrardirecoes(int tab[8][8], int x, int y) {
 	return(direcoes);
 }
 
+int cortab(int x, int y) {
+	if(y % 2 == x % 2) {
+		return(100);
+	}
+	if(y % 2 != x % 2) {
+		return(47);
+	}
+}
+
+void imprpeca(int tab[8][8], int x, int y) {
+	switch(tab[x][y]) {
+		case 0:
+			printf("  ");
+			break;
+			
+		case 1:
+		case 2:
+			printf("\e[%im" "  " "\e[0m", cor(dono(tab[x][y])));
+			break;
+			
+		case 3:
+		case 4:
+			printf("\e[%im" "<>" "\e[0m", cor(dono(tab[x][y])));
+			break;
+			
+		case 5:
+		case 6:
+			printf("\e[5;%im" "  " "\e[0m", cor(dono(tab[x][y])));
+			break;
+
+		case 7:
+		case 8:
+			printf("\e[5;%im" "<>" "\e[0m", cor(dono(tab[x][y])));
+			break;
+				
+		case 9:
+			printf("\e[%im" "><", cortab(x ,y));
+			break;
+					
+		default:
+			printf("ERR");
+	}
+
+	printf("\e[0m");
+}
+
 void impr(int tab[8][8], int visao) {
+	int topo, base, variacao, esquerda, direita;
+
+	switch(visao) {
+		case 1:
+			topo = 7;
+			base = 0;
+			esquerda = 0;
+			direita = 7;
+			variacao = -1;
+			printf("\n  A     B     C     D     E     F     G     H     \n");
+			break;
+
+		case 2:
+			topo = 0;
+			base = 7;
+			esquerda = 7;
+			direita = 0;
+			variacao = 1;
+			break; 
+	}
+
+	int x, y;
+
+	for(y = topo; y != base + variacao; y += variacao) {
+		printf(" %i", y);
+		for(x = esquerda; x != direita - variacao; x -= variacao) {
+			printf("\e[%im" "      ", cortab(x, y));
+		}
+		printf("\e[0m" "\n");
+
+		printf("  ");
+		for(x = esquerda; x != direita - variacao; x -= variacao) {
+			printf("\e[%im" "  ", cortab(x, y));
+			imprpeca(tab, x, y);
+			printf("\e[%im" "  ", cortab(x, y));
+		}
+		printf("\e[0m" "\n");
+
+		printf("  ");
+		for(x = esquerda; x != direita - variacao; x -= variacao) {
+			printf("\e[%im" "      ", cortab(x, y));
+		}
+		printf("\e[0m" "\n");
+	}
+}
+
+void impr_legacy(int tab[8][8], int visao) {
 	int cima, baixo, variacao, esq, dir;
 	switch(visao) {
 		case 1:
@@ -453,7 +550,6 @@ int seleccasa(int jog, int tab[8][8]) {
 		}
 		
 		unsel(tab);
-		
 	}
 	
 	return(0);
